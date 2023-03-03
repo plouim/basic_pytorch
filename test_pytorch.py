@@ -67,7 +67,7 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl):
         print(epoch, val_loss)
 
 def preprocess(x, y):
-    return x.view(-1, 1, 28, 28), y
+    return x.view(-1, 1, 28, 28).to(dev), y.to(dev)
 
 class Mnist_Logistic(nn.Module):
     def __init__(self):
@@ -98,6 +98,12 @@ class WrappedDataLoader():
         for b in batches:
             yield (self.func(*b))
 
+if torch.cuda.is_available():
+    print("GPU is available")
+else:
+    print("GPU is not available")
+dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 # convert data to tensor type
 (x_train, y_train, x_valid, y_valid) = map(torch.tensor,
                                             (x_train, y_train, x_valid, y_valid))
@@ -105,7 +111,7 @@ class WrappedDataLoader():
 num_data, _ = x_train.shape
 bs = 64     # batch size
 eta = 0.1   # learning rate
-epochs = 20  # epochs
+epochs = 2  # epochs
 
 train_ds = TensorDataset(x_train, y_train)
 valid_ds = TensorDataset(x_valid, y_valid)
@@ -117,17 +123,39 @@ train_dl, valid_dl = get_data(train_ds, valid_ds, bs)
 train_dl = WrappedDataLoader(train_dl, preprocess)
 valid_dl = WrappedDataLoader(valid_dl, preprocess)
 #model = Mnist_CNN()
-model = nn.Sequential(
-#            Lambda(preprocess),
-            nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(16, 16, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(16, 10, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(),
-#            nn.AvgPool2d(4),
-            nn.AdaptiveAvgPool2d(1),
-            Lambda(lambda x: x.view(x.size(0), -1)),
-        )
-opt = optim.SGD(model.parameters(), lr=eta, momentum=0.9)
-fit(epochs, model, loss_func, opt, train_dl, valid_dl)
+# model = nn.Sequential(
+# #            Lambda(preprocess),
+            # nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1),
+            # nn.ReLU(),
+            # nn.Conv2d(16, 16, kernel_size=3, stride=2, padding=1),
+            # nn.ReLU(),
+            # nn.Conv2d(16, 10, kernel_size=3, stride=2, padding=1),
+            # nn.ReLU(),
+# #            nn.AvgPool2d(4),
+            # nn.AdaptiveAvgPool2d(1),
+            # Lambda(lambda x: x.view(x.size(0), -1)),
+        # )
+#model.to(dev)
+#opt = optim.SGD(model.parameters(), lr=eta, momentum=0.9)
+#fit(epochs, model, loss_func, opt, train_dl, valid_dl)
+# model = nn.Sequential(
+        # nn.Conv2d(in_channels=1, out_channels=20, kernel_size=5),
+        # nn.Tanh(),
+        # nn.AvgPool2d(kernel_size=2, stride=2),
+        # nn.Conv2d(in_channels=20, out_channels=50, kernel_size=5),
+        # nn.Tanh(),
+        # nn.AvgPool2d(kernel_size=2, stride=2),
+        # nn.Linear(in_features=50*4*4, out_features=500)
+        # )
+class my_model(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 20, 5)
+        self.
+model = my_model()
+print(model(x_train[0].reshape(1,28,28)))
+print(model(x_train[0].reshape(1,28,28)).shape)
+
+
+
+
